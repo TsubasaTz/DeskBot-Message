@@ -38,8 +38,8 @@ command to run if program contains helper info
 
 ## Authors
 
-Maggie Nguyen - [@TsubasaTz](https://github.com/TsubasaTz)
-Tyler Bolden - [@b3dpineapple](https://github.com/b3dpineapple)
+* Maggie Nguyen - [@TsubasaTz](https://github.com/TsubasaTz)
+* Tyler Bolden - [@b3dpineapple](https://github.com/b3dpineapple)
 
 <!--## Version History
 * 0.1
