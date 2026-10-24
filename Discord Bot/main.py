@@ -21,14 +21,12 @@ from websockets.exceptions import ConnectionClosed
 
 # Load env data. 
 load_dotenv()
-
 token = os.getenv("DISCORD_TOKEN")
 guild_id = os.getenv("GUILD_ID")
 
 # Validate required Discord credentials.
 if not token:
     raise RuntimeError("DISCORD_TOKEN is missing from .env")
-
 if not guild_id:
     raise RuntimeError("GUILD_ID is missing from .env")
 
@@ -45,8 +43,8 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
+
 # Websocket
-# ---
 
 # SSL Certificate
 def create_ssl_context() -> ssl.SSLContext:
@@ -74,15 +72,13 @@ connected_devices = {}
 # Prevents the server task being started multiple times. 
 websocket_server_task = None
 
+# Authenticate a device and maintain its WebSocket connection.
 async def handle_device(websocket):
-    # Authenticate a device and maintain its WebSocket connection.
-
     device_number = None
 
     try:
         # Wait for the device to send registration data within 10 seconds. 
         raw_registration = await asyncio.wait_for(websocket.recv(),timeout=10)
-
         registration = json.loads(raw_registration)
 
         # Device Number and Token. 
@@ -118,7 +114,6 @@ async def handle_device(websocket):
 
         # Save connection for this device number.
         connected_devices[device_number] = websocket
-
         print(f"Device {device_number} connected.")
 
         # ESP32 sends confirmation.
@@ -155,11 +150,9 @@ async def handle_device(websocket):
             del connected_devices[device_number]
             print(f"Device {device_number} disconnected.")
 
-
 # Start Websocket server
 async def run_websocket_server():
     # Run the local WebSocket server until the bot shuts down.
-
     async with serve(handle_device, WS_HOST, WS_PORT, ssl=ssl_ctx):
         print(f"WebSocket server listening on " f"{WS_HOST}:{WS_PORT}")
 
@@ -168,7 +161,6 @@ async def run_websocket_server():
 
 
 # Command
-# ---
 
 @tree.command(
     name="message",
@@ -220,19 +212,17 @@ async def send_device_message(
 
         print(f"Discord message sent to device {device}.")
 
+# Remove the connection if it is no longer active.
     except ConnectionClosed:
-        # Remove the connection if it is no longer active.
         if connected_devices.get(device) is websocket:
             del connected_devices[device]
 
         await interaction.response.send_message(f"Device {device} disconnected before the message could be sent.",ephemeral=True)
 
-
 # Sync command with discord
 @client.event
 async def on_ready():
     # Sync Discord commands and start the WebSocket server.
-
     global websocket_server_task
 
     # Register slash commands for the configured Discord server.
