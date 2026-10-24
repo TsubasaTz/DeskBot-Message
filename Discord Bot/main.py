@@ -13,6 +13,9 @@ import os
 import asyncio
 import json
 import hmac
+import ssl
+import csv
+import os.path
 from websockets.asyncio.server import serve
 from websockets.exceptions import ConnectionClosed
 
@@ -38,14 +41,23 @@ handler = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w"
 intents = discord.Intents.default()
 intents.message_content = True
 
-# Set client and tree for commands
+# Set client and tree for commands.
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
 # Websocket
 # ---
 
-# Local WebSocket server for my MAc
+# SSL Certificate
+def create_ssl_context() -> ssl.SSLContext:
+    path = os.path.abspath(os.path.dirname(__file__)) # For relative path.
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    # Create self-signed certificates or obtain certificates from a CA and insert into /cert directory.
+    ctx.load_cert_chain(path + "/cert/certificate.crt", path + "/cert/private.key")
+    return ctx
+ssl_ctx = create_ssl_context()
+
+# Local WebSocket server addressing.
 WS_HOST = "0.0.0.0"
 WS_PORT = 8765
 
@@ -56,14 +68,14 @@ DEVICE_TOKENS = {
     3: os.getenv("DEVICE_3_TOKEN"),
 }
 
-# For active WebSocket connections
+# For active WebSocket connections.
 connected_devices = {}
 
 # Prevents the server task being started multiple times. 
 websocket_server_task = None
 
 async def handle_device(websocket):
-    """Authenticate a device and maintain its WebSocket connection."""
+    # Authenticate a device and maintain its WebSocket connection.
 
     device_number = None
 
@@ -146,9 +158,9 @@ async def handle_device(websocket):
 
 # Start Websocket server
 async def run_websocket_server():
-    """Run the local WebSocket server until the bot shuts down."""
+    # Run the local WebSocket server until the bot shuts down.
 
-    async with serve(handle_device, WS_HOST, WS_PORT):
+    async with serve(handle_device, WS_HOST, WS_PORT, ssl=ssl_ctx):
         print(f"WebSocket server listening on " f"{WS_HOST}:{WS_PORT}")
 
         # Keep the server running.
@@ -172,7 +184,7 @@ async def send_device_message(
     device: int,
     message: str
 ) -> None:
-    """Send a Discord message to one selected ESP32."""
+    # Send a Discord message to one selected ESP32.
 
     # Ensure the selected device is configured.
     if device not in DEVICE_TOKENS:
@@ -219,7 +231,7 @@ async def send_device_message(
 # Sync command with discord
 @client.event
 async def on_ready():
-    """Sync Discord commands and start the WebSocket server."""
+    # Sync Discord commands and start the WebSocket server.
 
     global websocket_server_task
 

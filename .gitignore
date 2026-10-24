@@ -222,3 +222,6 @@ __marimo__/
 
 # Discord Bot
 discord.log
+
+# Certificates
+cert/
